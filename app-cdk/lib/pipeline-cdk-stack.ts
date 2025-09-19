@@ -12,6 +12,7 @@ import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
 interface ConsumerProps extends StackProps {
   ecrRepository: ecr.Repository,
   fargateServiceTest: ecsPatterns.ApplicationLoadBalancedFargateService,
+  fargateServiceProd: ecsPatterns.ApplicationLoadBalancedFargateService,
 }
 
 export class PipelineCdkStack extends Stack {
@@ -115,18 +116,7 @@ export class PipelineCdkStack extends Stack {
         }),
       ],
     });
-
-    pipeline.addStage({
-      stageName: 'Deploy-Test',
-      actions: [
-        new codepipeline_actions.EcsDeployAction({
-          actionName: 'Deploy-Fargate-Test',
-          service: props.fargateServiceTest.service,
-          input: dockerBuildOutput,
-        }),
-      ]
-    });
-
+    
     pipeline.addStage({
       stageName: 'Code-Quality-Testing',
       actions: [
@@ -147,6 +137,33 @@ export class PipelineCdkStack extends Stack {
           project: dockerBuild,
           input: sourceOutput,
           outputs: [dockerBuildOutput],
+        }),
+      ],
+    });
+
+    pipeline.addStage({
+      stageName: 'Deploy-Test',
+      actions: [
+        new codepipeline_actions.EcsDeployAction({
+          actionName: 'Deploy-Fargate-Test',
+          service: props.fargateServiceTest.service,
+          input: dockerBuildOutput,
+        }),
+      ]
+    });
+
+    pipeline.addStage({
+      stageName: 'Deploy-Production',
+      actions: [
+        new codepipeline_actions.ManualApprovalAction({
+          actionName: 'Approve-Deploy-Prod',
+          runOrder: 1,
+        }),
+        new codepipeline_actions.EcsDeployAction({
+          actionName: 'Deploy-Fargate-Prod',
+          service: props.fargateServiceProd.service,
+          input: dockerBuildOutput,
+          runOrder: 2,
         }),
       ],
     });
