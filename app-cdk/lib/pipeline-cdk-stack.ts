@@ -138,6 +138,8 @@ export class PipelineCdkStack extends Stack {
       ],
     });
 
+    
+
     new CfnOutput(this, 'SourceConnectionArn', {
         value: SourceConnection.attrConnectionArn,
     });
