@@ -83,7 +83,18 @@ export class PipelineCdkStack extends Stack {
       actions: ['ssm:GetParametersByPath', 'ssm:GetParameters'],
     });
 
+    const signerPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: ['*'],
+      actions: [
+        'signer:PutSigningProfile',
+        'signer:SignPayload',
+        'signer:GetRevocationStatus',
+      ],
+    });
+
     dockerBuild.addToRolePolicy(signerParameterPolicy);
+    dockerBuild.addToRolePolicy(signerPolicy);
 
     const sourceOutput = new codepipeline.Artifact();
     const unitTestOutput = new codepipeline.Artifact();
